@@ -53,6 +53,7 @@ Module reference
      query-type: BOOL
      query-size: BOOL
      reply-size: BOOL
+     opt-code: BOOL
 
 .. _mod-stats_id:
 
@@ -238,3 +239,20 @@ in bytes:
 * 4096-65535
 
 *Default:* off
+
+opt-code
+........
+
+If enabled, EDNS options received in queries are counted by their EDNS0 Option Code:
+
+* CODE0
+* ...
+* NSID (CODE3)
+* CODE4
+* ...
+* CHAIN (CODE13)
+* EDNS-KEY-TAG (CODE14)
+* other - All other codes
+
+*Default:* off
+
