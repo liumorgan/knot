@@ -725,7 +725,7 @@ static int check_rr_constraints(knot_pkt_t *pkt, knot_rrset_t *rr, size_t rr_siz
 		break;
 	case KNOT_RRTYPE_OPT:
 		CHECK_AR_CONSTRAINTS(pkt, rr, opt_rr, knot_edns_check_record);
-		break;
+		return knot_edns_opt_wire_init(rr, &pkt->opt_pos);
 	default:
 		break;
 	}

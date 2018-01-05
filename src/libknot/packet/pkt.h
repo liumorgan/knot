@@ -1,4 +1,4 @@
-/*  Copyright (C) 2017 CZ.NIC, z.s.p.o. <knot-dns@labs.nic.cz>
+/*  Copyright (C) 2018 CZ.NIC, z.s.p.o. <knot-dns@labs.nic.cz>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -83,6 +83,9 @@ struct knot_pkt {
 		uint8_t *pos;
 		size_t len;
 	} tsig_wire;
+
+	/* Positions of options in the OPT RR in the wire. */
+	knot_edns_opt_wire_t opt_pos;
 
 	/* Packet sections. */
 	knot_section_t current;
@@ -338,7 +341,8 @@ static inline bool knot_pkt_has_dnssec(const knot_pkt_t *pkt)
 static inline bool knot_pkt_has_nsid(const knot_pkt_t *pkt)
 {
 	return knot_pkt_has_edns(pkt)
-	       && knot_edns_has_option(pkt->opt_rr, KNOT_EDNS_OPTION_NSID);
+	       && knot_edns_get_option(pkt->opt_rr, KNOT_EDNS_OPTION_NSID,
+	                               &pkt->opt_pos) != NULL;
 }
 
 /*! @} */

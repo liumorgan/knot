@@ -1,4 +1,4 @@
-/*  Copyright (C) 2017 CZ.NIC, z.s.p.o. <knot-dns@labs.nic.cz>
+/*  Copyright (C) 2018 CZ.NIC, z.s.p.o. <knot-dns@labs.nic.cz>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -266,7 +266,8 @@ static int answer_edns_init(const knot_pkt_t *query, knot_pkt_t *resp,
 	}
 
 	/* Append NSID if requested and available. */
-	if (knot_edns_has_option(query->opt_rr, KNOT_EDNS_OPTION_NSID)) {
+	if (knot_edns_get_option(query->opt_rr, KNOT_EDNS_OPTION_NSID,
+	                         &query->opt_pos) != NULL) {
 		conf_val_t *nsid = &conf()->cache.srv_nsid;
 		size_t nsid_len;
 		const uint8_t *nsid_data = conf_bin(nsid, &nsid_len);

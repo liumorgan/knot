@@ -436,27 +436,23 @@ int knot_edns_add_option(knot_rrset_t *opt_rr, uint16_t code,
 }
 
 _public_
-bool knot_edns_has_option(const knot_rrset_t *opt_rr, uint16_t code)
+uint8_t *knot_edns_get_option(const knot_rrset_t *opt_rr, uint16_t code,
+                              const knot_edns_opt_wire_t *opt_pos)
 {
-	assert(opt_rr != NULL);
+	if (opt_rr == NULL) {
+		return NULL;
+	}
 
-	knot_rdata_t *rdata = knot_rdataset_at(&opt_rr->rrs, 0);
-	assert(rdata != NULL);
+	if (opt_pos == NULL ||
+	    code > KNOT_EDNS_MAX_OPTION_CODE) {
+		knot_rdata_t *rdata = knot_rdataset_at(&opt_rr->rrs, 0);
+		if (rdata == NULL) {
+			return NULL;
+		}
+		return find_option(rdata, code);
+	}
 
-	uint8_t *pos = find_option(rdata, code);
-
-	return pos != NULL;
-}
-
-_public_
-uint8_t *knot_edns_get_option(const knot_rrset_t *opt_rr, uint16_t code)
-{
-	assert(opt_rr != NULL);
-
-	knot_rdata_t *rdata = knot_rdataset_at(&opt_rr->rrs, 0);
-	assert(rdata != NULL);
-
-	return find_option(rdata, code);
+	return opt_pos->ptr[code];
 }
 
 _public_
@@ -498,6 +494,40 @@ bool knot_edns_check_record(knot_rrset_t *opt_rr)
 	}
 
 	return wire.error == KNOT_EOK;
+}
+
+_public_
+int knot_edns_opt_wire_init(knot_rrset_t *opt_rr,
+                            knot_edns_opt_wire_t *out)
+{
+	if (out == NULL) {
+		return KNOT_EINVAL;
+	}
+
+	knot_rdata_t *rdata = knot_rdataset_at(&opt_rr->rrs, 0);
+	if (rdata == NULL) {
+		return KNOT_EINVAL;
+	}
+
+	wire_ctx_t wire = wire_ctx_init_const(rdata->data, rdata->len);
+
+	for (int i = 0; i <= KNOT_EDNS_MAX_OPTION_CODE; i++) {
+		out->ptr[i] = NULL;
+	}
+
+	while (wire_ctx_available(&wire) > 0 && wire.error == KNOT_EOK) {
+		uint8_t *pos = wire.position;
+		uint16_t opt_code = wire_ctx_read_u16(&wire); 			// code
+		uint16_t opt_len = wire_ctx_read_u16(&wire);	// length
+		wire_ctx_skip(&wire, opt_len);			// data
+		if (wire.error == KNOT_EOK) {
+			out->ptr[opt_code] = pos;
+		} else {
+			return wire.error;
+		}
+	}
+
+	return wire.error;
 }
 
 _public_

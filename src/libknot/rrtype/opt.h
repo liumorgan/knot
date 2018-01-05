@@ -1,4 +1,4 @@
-/*  Copyright (C) 2017 CZ.NIC, z.s.p.o. <knot-dns@labs.nic.cz>
+/*  Copyright (C) 2018 CZ.NIC, z.s.p.o. <knot-dns@labs.nic.cz>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -50,6 +50,8 @@ enum knot_edns_const {
 	KNOT_EDNS_EXT_RCODE_POS            = 5,
 	/*! \brief EDNS OPTION header size. */
 	KNOT_EDNS_OPTION_HDRLEN            = 4,
+	/*! \brief Maximal currently relevant option code. */
+	KNOT_EDNS_MAX_OPTION_CODE          = 14,
 	/*! \brief Maximal edns client subnet data size (IPv6). */
 	KNOT_EDNS_MAX_OPTION_CLIENT_SUBNET = 20,
 	/*! \brief Maximal size of EDNS client subnet address in bytes (IPv6). */
@@ -294,26 +296,35 @@ int knot_edns_add_option(knot_rrset_t *opt_rr, uint16_t code,
                          uint16_t size, const uint8_t *data, knot_mm_t *mm);
 
 /*!
- * \brief Checks if the OPT RR contains Option with the specified code.
- *
- * \param opt_rr OPT RR structure to check for the Option in.
- * \param code Option code to check for.
- *
- * \retval true if the OPT RR contains Option with Option code \a code.
- * \retval false otherwise.
+ * \brief Pointers to every option in the OPT RR wire.
  */
-bool knot_edns_has_option(const knot_rrset_t *opt_rr, uint16_t code);
+typedef struct knot_edns_opt_wire {
+	uint8_t *ptr[KNOT_EDNS_MAX_OPTION_CODE + 1];
+} knot_edns_opt_wire_t;
+
+/*!
+ * \brief Initializes pointers to options in a given OPT RR.
+ *
+ * \param opt_rr   OPT RR structure to be used.
+ * \param out      Structure to be initialized.
+ *
+ * \retval KNOT_E*
+ */
+int knot_edns_opt_wire_init(knot_rrset_t *opt_rr,
+                            knot_edns_opt_wire_t *out);
 
 /*!
  * \brief Searches the OPT RR for option with the specified code.
  *
- * \param opt_rr  OPT RR structure to search for the Option in.
- * \param code    Option code to search for.
+ * \param opt_rr   OPT RR structure to search in.
+ * \param code     Option code to search for.
+ * \param opt_pos  Positions of options in the OPT RR (can be NULL).
  *
  * \retval pointer to option if found
  * \retval NULL otherwise.
  */
-uint8_t *knot_edns_get_option(const knot_rrset_t *opt_rr, uint16_t code);
+uint8_t *knot_edns_get_option(const knot_rrset_t *opt_rr, uint16_t code,
+                              const knot_edns_opt_wire_t *opt_pos);
 
 /*!
  * \brief Returns the option code.
